@@ -123,10 +123,8 @@ func (wsl *WebSocketListener) readAndProcessMessage() error {
 	}
 
 	if packet.MessageType == messageTypePositionReport {
-		var positionReport PositionReport
-		positionReport = *packet.Message.PositionReport
-
-		err := wsl.collectorService.Process(positionReport.UserID, shipName, positionReport.Latitude, positionReport.Longitude)
+		positionReport := *packet.Message.PositionReport
+		err = wsl.collectorService.Process(positionReport.UserID, shipName, positionReport.Latitude, positionReport.Longitude)
 		if err != nil {
 			return fmt.Errorf("error on processing webhook message: %w", err)
 		}

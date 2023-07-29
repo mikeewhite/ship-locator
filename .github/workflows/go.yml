@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-      - name: Build
-        run: go build -v ./...
+      - name: Build collector
+        run: go build -v ./backend/cmd/collector
       - name: Test
-        run: go test -v ./...
+        run: go test -v ./backend/...

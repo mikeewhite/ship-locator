@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  collector:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: collector
+    environment:
+      - SHIPLOC_WEBSOCKETAPIKEY
+    command: ./collector

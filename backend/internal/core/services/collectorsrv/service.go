@@ -62,7 +62,7 @@ func (s *Service) worker(ctx context.Context) {
 			if err := s.msgPublisher.Publish(ship); err != nil {
 				clog.Errorw("failed to publish ship",
 					"error", err.Error(),
-					"mmsa", ship.MMSI,
+					"mmsi", ship.MMSI,
 					"name", ship.Name)
 			}
 		case <-ctx.Done():

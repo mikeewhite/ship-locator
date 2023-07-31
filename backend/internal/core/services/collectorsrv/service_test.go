@@ -26,7 +26,7 @@ func TestService_Process(t *testing.T) {
 
 	require.NoError(t, s.Process(12345, "CALL SIGN", 66.02695, 12.253821666666665))
 
-	time.Sleep(200) // sleep for 200 ms to allow time for worker pool to process job
+	time.Sleep(1 * time.Second) // sleep to allow time for worker pool to process job
 
 	require.NotEmpty(t, mockProducer.queue)
 	require.Len(t, mockProducer.queue, 1)

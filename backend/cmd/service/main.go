@@ -22,6 +22,9 @@ func main() {
 	}
 
 	consumer, err := kafka.NewConsumer(*cfg)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialise Kafka consumer: %s", err.Error()))
+	}
 	defer consumer.Shutdown()
 
 	ctx, cancel := context.WithCancel(context.Background())

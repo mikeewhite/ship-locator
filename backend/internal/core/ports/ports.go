@@ -1,11 +1,11 @@
 package ports
 
-import "github.com/mikeewhite/ship-locator/backend/internal/core/domain"
+import (
+	"context"
 
-type Publisher interface {
-	Publish(data *domain.Ship) error
-}
+	"github.com/mikeewhite/ship-locator/backend/internal/core/domain"
+)
 
-type Consumer interface {
-	Consume()
+type Producer interface {
+	Write(context.Context, domain.Ship) error
 }

@@ -1,2 +1,5 @@
 .env
 .idea
+
+backend/collector
+backend/service

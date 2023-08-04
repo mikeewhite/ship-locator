@@ -5,6 +5,7 @@ clean:
 
 build: clean
 	@cd backend && go build -o collector ./cmd/collector
+	@cd backend && go build -o service ./cmd/service
 
 test: clean
 	@cd backend && go test ./... -count=1

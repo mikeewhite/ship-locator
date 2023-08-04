@@ -1,4 +1,4 @@
-package aishdl
+package websocket
 
 import (
 	"context"

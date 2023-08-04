@@ -37,6 +37,9 @@ jobs:
       - name: Build collector
         working-directory: backend
         run: go build -v ./cmd/collector
+      - name: Build service
+        working-directory: backend
+        run: go build -v ./cmd/service
       - name: Test
         working-directory: backend
         run: go test -v ./...

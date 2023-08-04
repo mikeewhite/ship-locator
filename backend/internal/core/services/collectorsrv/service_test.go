@@ -12,10 +12,10 @@ import (
 )
 
 type MockProducer struct {
-	queue []*domain.Ship
+	queue []domain.Ship
 }
 
-func (mp *MockProducer) Publish(data *domain.Ship) error {
+func (mp *MockProducer) Write(ctx context.Context, data domain.Ship) error {
 	mp.queue = append(mp.queue, data)
 	return nil
 }

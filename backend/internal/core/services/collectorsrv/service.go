@@ -17,11 +17,11 @@ const (
 
 type Service struct {
 	ch           chan *domain.Ship
-	msgPublisher ports.Publisher
+	msgPublisher ports.Producer
 	wg           sync.WaitGroup
 }
 
-func New(ctx context.Context, publisher ports.Publisher) *Service {
+func New(ctx context.Context, publisher ports.Producer) *Service {
 	s := &Service{
 		ch:           make(chan *domain.Ship, dataChanSize),
 		msgPublisher: publisher,
@@ -59,8 +59,8 @@ func (s *Service) worker(ctx context.Context) {
 			if !ok {
 				return
 			}
-			if err := s.msgPublisher.Publish(ship); err != nil {
-				clog.Errorw("failed to publish ship",
+			if err := s.msgPublisher.Write(ctx, *ship); err != nil {
+				clog.Errorw("failed to write ship data to msg publisher",
 					"error", err.Error(),
 					"mmsi", ship.MMSI,
 					"name", ship.Name)

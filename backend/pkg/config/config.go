@@ -8,6 +8,10 @@ import (
 
 type Config struct {
 	WebSocketAPIKey string
+
+	KafkaAddress       string `default:"localhost:9092"`
+	KafkaTopic         string `default:"ship-data-topic"`
+	KafkaConsumerGroup string `default:"consumer-group-1"`
 }
 
 func Load() (*Config, error) {

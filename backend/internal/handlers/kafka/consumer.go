@@ -6,15 +6,18 @@ import (
 
 	"github.com/segmentio/kafka-go"
 
+	"github.com/mikeewhite/ship-locator/backend/internal/core/domain"
+	"github.com/mikeewhite/ship-locator/backend/internal/core/ports"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
 )
 
 type Consumer struct {
-	reader *kafka.Reader
+	reader  *kafka.Reader
+	service ports.ShipService
 }
 
-func NewConsumer(cfg config.Config) (*Consumer, error) {
+func NewConsumer(cfg config.Config, service ports.ShipService) (*Consumer, error) {
 	return &Consumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  []string{cfg.KafkaAddress},
@@ -26,6 +29,7 @@ func NewConsumer(cfg config.Config) (*Consumer, error) {
 				fmt.Println()
 			}),
 		}),
+		service: service,
 	}, nil
 }
 
@@ -45,6 +49,16 @@ func (c *Consumer) Read(ctx context.Context) error {
 				return fmt.Errorf("error on generating DTO from Kafka message: %w", err)
 			}
 			clog.Infof("🚢: %v", dto)
+
+			ship, err := dto.toDomainEntity()
+			if err != nil {
+				return fmt.Errorf("error on converting ship DTO to domain entity: %w", err)
+			}
+			ships := []domain.Ship{*ship}
+			err = c.service.Store(ctx, ships)
+			if err != nil {
+				return fmt.Errorf("error on storing ship data: %w", err)
+			}
 		}
 	}
 }

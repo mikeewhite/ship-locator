@@ -64,3 +64,5 @@ jobs:
       - name: Test
         working-directory: backend
         run: go test -v ./...
+        env:
+          SHIPLOC_POSTGRESADDRESS: postgres:5432

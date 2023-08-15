@@ -1,6 +1,3 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Go
 
 on:
@@ -28,18 +25,42 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          PGUSER: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ship_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
+
+      - name: Run migrations
+        run: psql -f backend/migrations/create_tables.sql postgresql://postgres:postgres@localhost:5433/ship_db
+
       - name: Build collector
         working-directory: backend
         run: go build -v ./cmd/collector
+
       - name: Build service
         working-directory: backend
         run: go build -v ./cmd/service
+
       - name: Test
         working-directory: backend
         run: go test -v ./...

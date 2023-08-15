@@ -41,7 +41,68 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:9092'
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
 
+  postgres:
+    image: postgres
+    hostname: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      - PGUSER=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ship_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/migrations/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    ports:
+      - "5432:5432"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  postgres-test:
+    image: postgres
+    hostname: postgres-test
+    container_name: postgres-test
+    restart: always
+    environment:
+      - PGUSER=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ship_db
+    volumes:
+      - ./backend/migrations/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    hostname: pgadmin
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - ./pgadmin4/servers.json:/pgadmin4/servers.json
+      - pgadmin_data:/var/lib/pgadmin
+
   collector:
+    hostname: collector
+    container_name: collector
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -55,13 +116,21 @@ services:
     restart: unless-stopped
 
   service:
+    hostname: service
+    container_name: service
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: service
     environment:
       - SHIPLOC_KAFKAADDRESS=kafka:9092
+      - SHIPLOC_POSTGRESADDRESS=postgres:5432
     command: ./service
     depends_on:
       - kafka
+      - postgres
     restart: unless-stopped
+
+volumes:
+  pgdata:
+  pgadmin_data:

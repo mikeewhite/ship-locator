@@ -7,6 +7,6 @@ import (
 )
 
 type ShipRepository interface {
-	Get(ctx context.Context, id int32) (domain.Ship, error)
+	Get(ctx context.Context, mmsi int32) (domain.Ship, error)
 	Store(ctx context.Context, ships []domain.Ship) error
 }

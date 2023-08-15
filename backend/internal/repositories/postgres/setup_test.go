@@ -11,8 +11,6 @@ type testVars struct {
 	pg *Postgres
 }
 
-// TODO - should this be a test main?
-
 func setup(t *testing.T) *testVars {
 	t.Helper()
 
@@ -29,7 +27,7 @@ func setup(t *testing.T) *testVars {
 
 	t.Cleanup(func() {
 		// wipe database
-		_, err := pg.conn.Exec(context.Background(), "delete from ships")
+		_, err := pg.conn.Exec(context.Background(), "DELETE FROM ships")
 		if err != nil {
 			t.Fatal(err)
 		}

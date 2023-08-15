@@ -32,7 +32,6 @@ func TestStore(t *testing.T) {
 	err := tv.pg.Store(context.Background(), ships)
 	require.NoError(t, err)
 
-	// TODO should I be getting via mmsi or id?
 	returnedShip, err := tv.pg.Get(context.Background(), 259000420)
 	require.NoError(t, err)
 
@@ -65,5 +64,3 @@ func TestStore_OverwritesExistingEntries(t *testing.T) {
 	assert.Equal(t, 66.03421, updatedShip.Latitude)
 	assert.Equal(t, 12.34251, updatedShip.Longitude)
 }
-
-// TODO - test store - missing name field

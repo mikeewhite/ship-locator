@@ -16,7 +16,18 @@ type Postgres struct {
 	conn *pgx.Conn
 }
 
-// TODO create an in mem version of this repo to use in service
+const (
+	selectSQL = `
+			SELECT name, latitude, longitude
+			FROM ships
+			WHERE mmsi=$1`
+	updateSQL = `
+			INSERT INTO ships (mmsi, name, latitude, longitude)
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT (mmsi)
+			DO
+				UPDATE SET name = EXCLUDED.name, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude`
+)
 
 // TODO - use a connection pool - https://github.com/jackc/pgx/wiki/Getting-started-with-pgx#using-a-connection-pool
 func NewPostgres(ctx context.Context, cfg config.Config) (*Postgres, error) {
@@ -36,45 +47,29 @@ func NewPostgres(ctx context.Context, cfg config.Config) (*Postgres, error) {
 	return &Postgres{conn: conn}, nil
 }
 
-// TODO should id be mmsi?
-func (pg *Postgres) Get(ctx context.Context, id int32) (domain.Ship, error) {
-	var mmsi int32
+func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
 	var name string
 	var latitude float64
 	var longitude float64
 
-	// TODO move SQL to const
-	err := pg.conn.QueryRow(ctx, "select mmsi, name, latitude, longitude from ships where mmsi=$1", id).Scan(&mmsi, &name, &latitude, &longitude)
+	err := pg.conn.QueryRow(ctx, selectSQL, mmsi).Scan(&name, &latitude, &longitude)
 	if err == pgx.ErrNoRows {
-		return domain.Ship{}, apperrors.NewNoShipFoundErr(id)
+		return domain.Ship{}, apperrors.NewNoShipFoundErr(mmsi)
 	}
 	if err != nil {
-		return domain.Ship{}, fmt.Errorf("error on querying ship with id '%d': %w", id, err)
+		return domain.Ship{}, fmt.Errorf("error on querying ship with id '%d': %w", mmsi, err)
 	}
 
 	return *domain.NewShip(mmsi, name, latitude, longitude), nil
 }
 
 func (pg *Postgres) Store(ctx context.Context, ships []domain.Ship) error {
-	// TODO - this needs to upsert
-
-	// TODO - batch this up
 	for _, ship := range ships {
-		// TODO - this can be a const
-		sqlStatement := `
-			INSERT INTO ships (mmsi, name, latitude, longitude)
-			VALUES ($1, $2, $3, $4)
-			ON CONFLICT (mmsi)
-			DO
-				UPDATE SET name = EXCLUDED.name, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude`
-		_, err := pg.conn.Exec(ctx, sqlStatement, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude)
+		_, err := pg.conn.Exec(ctx, updateSQL, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude)
 		if err != nil {
 			return fmt.Errorf("error on inserting ship with mmsi '%d': %w", ship.MMSI, err)
 		}
 	}
-
-	// TODO - change the signature and return the ID of the inserted record?
-
 	return nil
 }
 

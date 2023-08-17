@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrv"
+	"github.com/mikeewhite/ship-locator/backend/internal/handlers/graphql"
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka"
 	"github.com/mikeewhite/ship-locator/backend/internal/repositories/postgres"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
@@ -30,14 +32,24 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Postgres repository: %s", err.Error()))
 	}
+	service := shipsrv.New(repo)
 	consumer, err := kafka.NewConsumer(*cfg, shipsrv.New(repo))
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka consumer: %s", err.Error()))
 	}
 	defer consumer.Shutdown()
+	go func() {
+		if err := consumer.Read(ctx); err != nil && err != context.Canceled {
+			clog.Errorf("kafka consumer stopped due to error: %s", err.Error())
+		}
+	}()
 
-	if err = consumer.Read(ctx); err != nil {
-		clog.Errorf("kafka consumer stopped due to error: %s", err.Error())
+	server, err := graphql.New(*cfg, service)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialise GraphQL server: %s", err.Error()))
+	}
+	if err := server.Serve(ctx); err != nil && err != http.ErrServerClosed {
+		clog.Errorf("graphql server stopped due to error: %s\n", err.Error())
 	}
 }
 

@@ -9,6 +9,8 @@ import (
 type Config struct {
 	WebSocketAPIKey string
 
+	GraphQLAddress string `default:":8085"`
+
 	KafkaAddress       string `default:"localhost:9092"`
 	KafkaTopic         string `default:"ship-data-topic"`
 	KafkaConsumerGroup string `default:"consumer-group-1"`

@@ -1,0 +1,10 @@
+type Ship {
+    MMSI: Int!
+    Name: String!
+    Latitude: Float!
+    Longitude: Float!
+}
+
+type Query {
+    getShipByMMSI(mmsi: Int!): Ship
+}

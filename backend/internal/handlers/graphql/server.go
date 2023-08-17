@@ -21,8 +21,6 @@ type Server struct {
 
 const endpoint = "/graphql"
 
-type loggerFunc func(string, ...interface{})
-
 func New(cfg config.Config, service ports.ShipService) (*Server, error) {
 	s := &Server{
 		service: service,

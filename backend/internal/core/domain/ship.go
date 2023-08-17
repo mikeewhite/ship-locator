@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type Ship struct {
 	MMSI      int32
@@ -12,7 +15,7 @@ type Ship struct {
 func NewShip(mmsi int32, name string, latitude, longitude float64) *Ship {
 	ship := Ship{
 		MMSI:      mmsi,
-		Name:      name,
+		Name:      strings.TrimSpace(name),
 		Latitude:  latitude,
 		Longitude: longitude,
 	}
@@ -23,5 +26,14 @@ func (s *Ship) Validate() error {
 	if s.MMSI == 0 {
 		return errors.New("mmsi must be non-zero")
 	}
+
+	if s.Latitude < -90 || s.Latitude > 90 {
+		return errors.New("invalid latitude")
+	}
+
+	if s.Longitude < -180 || s.Longitude > 180 {
+		return errors.New("invalid longitude")
+	}
+
 	return nil
 }

@@ -126,6 +126,8 @@ services:
       - SHIPLOC_KAFKAADDRESS=kafka:9092
       - SHIPLOC_POSTGRESADDRESS=postgres:5432
     command: ./service
+    ports:
+      - "8085:8085"
     depends_on:
       - kafka
       - postgres

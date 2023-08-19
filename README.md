@@ -2,7 +2,7 @@
 
 ![build status](https://github.com/mikeewhite/ship-locator/actions/workflows/go.yml/badge.svg)
 
-![](https://github.com/mikeewhite/ship-locator/demo.gif)
+![](https://github.com/mikeewhite/ship-locator/blob/main/demo.gif)
 
 ## Usage
 

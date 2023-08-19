@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,8 +43,11 @@ func TestHandleQuery_NoMatch(t *testing.T) {
 	require.NoError(t, err)
 	defer srv.Shutdown()
 
-	url := `http://localhost:8085/graphql?query={ship(mmsi:1234){mmsi,name,latitude,longitude}}`
-	req, err := http.NewRequest("GET", url, nil)
+	url := `http://localhost:8085/graphql`
+	body := `{
+			"query": "{ ship(mmsi: 1234) { mmsi name latitude longitude } }"
+		}`
+	req, err := http.NewRequest("POST", url, strings.NewReader(body))
 	require.NoError(t, err)
 
 	rec := httptest.NewRecorder()
@@ -61,14 +65,18 @@ func TestHandleQuery_FullyPopulatedResponse(t *testing.T) {
 	require.NoError(t, err)
 	defer srv.Shutdown()
 
-	url := `http://localhost:8085/graphql?query={ship(mmsi:259000420){mmsi,name,latitude,longitude}}`
-	req, err := http.NewRequest("GET", url, nil)
+	url := `http://localhost:8085/graphql`
+	body := `{
+			"query": "{ ship(mmsi: 259000420) { mmsi name latitude longitude } }"
+		}`
+	req, err := http.NewRequest("POST", url, strings.NewReader(body))
+	req.Header.Add("Content-Type", "application/json")
 	require.NoError(t, err)
 
 	rec := httptest.NewRecorder()
 	srv.HandleQuery(rec, req)
 
-	assert.Equal(t, 200, rec.Code)
+	require.Equal(t, 200, rec.Code)
 	expResp := `{
 		"data": {
 			"ship": {
@@ -90,8 +98,11 @@ func TestHandleQuery_PartiallyPopulatedResponse(t *testing.T) {
 	require.NoError(t, err)
 	defer srv.Shutdown()
 
-	url := `http://localhost:8085/graphql?query={ship(mmsi:259000420){name}}`
-	req, err := http.NewRequest("GET", url, nil)
+	url := `http://localhost:8085/graphql`
+	body := `{
+			"query": "{ ship(mmsi: 259000420) { name } }"
+		}`
+	req, err := http.NewRequest("POST", url, strings.NewReader(body))
 	require.NoError(t, err)
 
 	rec := httptest.NewRecorder()

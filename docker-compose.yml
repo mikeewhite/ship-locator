@@ -133,6 +133,18 @@ services:
       - postgres
     restart: unless-stopped
 
+  dashboard:
+    hostname: dashboard
+    container_name: dashboard
+    build:
+      context: ./frontend/dashboard
+      dockerfile: Dockerfile
+    environment:
+      - REACT_APP_GOOGLE_MAPS_API_KEY
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+
 volumes:
   pgdata:
   pgadmin_data:

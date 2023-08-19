@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/graphql-go/graphql"
+	"github.com/rs/cors"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/ports"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
@@ -17,6 +18,12 @@ type Server struct {
 	httpServer http.Server
 	service    ports.ShipService
 	schema     *graphql.Schema
+}
+
+type postData struct {
+	Query     string                 `json:"query"`
+	Operation string                 `json:"operationName"`
+	Variables map[string]interface{} `json:"variables"`
 }
 
 const endpoint = "/graphql"
@@ -36,7 +43,7 @@ func New(cfg config.Config, service ports.ShipService) (*Server, error) {
 	mux.HandleFunc(endpoint, s.HandleQuery)
 	s.httpServer = http.Server{
 		Addr:    cfg.GraphQLAddress,
-		Handler: mux,
+		Handler: cors.Default().Handler(mux),
 	}
 
 	return s, nil
@@ -60,17 +67,24 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) HandleQuery(w http.ResponseWriter, r *http.Request) {
-	result := s.executeQuery(r.URL.Query().Get("query"))
+	var p postData
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		w.WriteHeader(400)
+		return
+	}
+	result := s.executeQuery(p)
 	if err := json.NewEncoder(w).Encode(result); err != nil {
 		clog.Errorf("error on encoding graphql response: %s", err.Error())
 	}
 }
 
-func (s *Server) executeQuery(query string) *graphql.Result {
+func (s *Server) executeQuery(postData postData) *graphql.Result {
 	result := graphql.Do(graphql.Params{
-		Schema:        *s.schema,
-		RequestString: query,
-		Context:       context.Background(),
+		Schema:         *s.schema,
+		RequestString:  postData.Query,
+		VariableValues: postData.Variables,
+		OperationName:  postData.Operation,
+		Context:        context.Background(),
 	})
 	if len(result.Errors) > 0 {
 		clog.Errorf("error returned from graphQL API: %v", result.Errors)

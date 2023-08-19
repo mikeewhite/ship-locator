@@ -3,3 +3,12 @@
 
 backend/collector
 backend/service
+
+frontend/dashboard/node_modules
+frontend/dashboard/.pnp
+frontend/dashboard/.pnp.js
+
+frontend/dashboard/coverage
+frontend/dashboard/build
+
+frontend/dashboard/npm-debug.log*

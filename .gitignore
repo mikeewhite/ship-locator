@@ -2,6 +2,7 @@
 .idea
 
 backend/collector
+backend/coverage.out
 backend/service
 
 frontend/dashboard/node_modules

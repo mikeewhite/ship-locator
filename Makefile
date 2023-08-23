@@ -10,5 +10,9 @@ build: clean
 test: clean
 	@cd backend && go test ./... -count=1
 
+coverage: clean
+	@cd backend && go test ./... -count=1 -coverprofile coverage.out
+	@cd backend && go tool cover -html=coverage.out
+
 lint: clean
 	@cd backend && golangci-lint run

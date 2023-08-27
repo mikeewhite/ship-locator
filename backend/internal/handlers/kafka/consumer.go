@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 
@@ -15,9 +16,10 @@ import (
 type Consumer struct {
 	reader  *kafka.Reader
 	service ports.ShipService
+	metrics Metrics
 }
 
-func NewConsumer(cfg config.Config, service ports.ShipService) (*Consumer, error) {
+func NewConsumer(cfg config.Config, service ports.ShipService, metrics Metrics) (*Consumer, error) {
 	return &Consumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  []string{cfg.KafkaAddress},
@@ -30,6 +32,7 @@ func NewConsumer(cfg config.Config, service ports.ShipService) (*Consumer, error
 			}),
 		}),
 		service: service,
+		metrics: metrics,
 	}, nil
 }
 
@@ -39,10 +42,12 @@ func (c *Consumer) Read(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
+			start := time.Now()
 			m, err := c.reader.ReadMessage(ctx)
 			if err != nil {
 				return fmt.Errorf("error on reading message: %w", err)
 			}
+			c.metrics.KafkaConsumeTime(c.reader.Config().Topic, start)
 
 			dto, err := newShipDTOFromKafkaMsg(&m)
 			if err != nil {

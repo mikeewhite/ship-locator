@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -12,8 +13,13 @@ import (
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
 )
 
+type Metrics interface {
+	DBQueryTime(queryName string, startTime time.Time)
+}
+
 type Postgres struct {
-	conn *pgx.Conn
+	conn    *pgx.Conn
+	metrics Metrics
 }
 
 const (
@@ -30,7 +36,7 @@ const (
 )
 
 // TODO - use a connection pool - https://github.com/jackc/pgx/wiki/Getting-started-with-pgx#using-a-connection-pool
-func NewPostgres(ctx context.Context, cfg config.Config) (*Postgres, error) {
+func NewPostgres(ctx context.Context, cfg config.Config, metrics Metrics) (*Postgres, error) {
 	url := fmt.Sprintf("postgres://%s:%s@%s/%s",
 		cfg.PostgresUsername, cfg.PostgresPassword, cfg.PostgresAddress, cfg.PostgresDBName)
 	conn, err := pgx.Connect(ctx, url)
@@ -44,10 +50,11 @@ func NewPostgres(ctx context.Context, cfg config.Config) (*Postgres, error) {
 		return nil, fmt.Errorf("failed to ping postgres: %w", err)
 	}
 
-	return &Postgres{conn: conn}, nil
+	return &Postgres{conn: conn, metrics: metrics}, nil
 }
 
 func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
+	defer pg.metrics.DBQueryTime("get_ship_data", time.Now())
 	var name string
 	var latitude float64
 	var longitude float64
@@ -64,12 +71,16 @@ func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
 }
 
 func (pg *Postgres) Store(ctx context.Context, ships []domain.Ship) error {
+	start := time.Now()
+	defer pg.metrics.DBQueryTime("store_ship_data", start)
 	for _, ship := range ships {
 		_, err := pg.conn.Exec(ctx, updateSQL, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude)
 		if err != nil {
 			return fmt.Errorf("error on inserting ship with mmsi '%d': %w", ship.MMSI, err)
 		}
 	}
+
+	clog.Infof("Stored %d entries in Postgres in %d ms", len(ships), time.Since(start).Milliseconds())
 	return nil
 }
 

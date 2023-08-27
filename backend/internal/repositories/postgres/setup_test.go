@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
 )
@@ -10,6 +11,11 @@ import (
 type testVars struct {
 	pg *Postgres
 }
+
+type NoopMetricsClient struct {
+}
+
+func (mc *NoopMetricsClient) DBQueryTime(queryName string, startTime time.Time) {}
 
 func setup(t *testing.T) *testVars {
 	t.Helper()
@@ -20,7 +26,7 @@ func setup(t *testing.T) *testVars {
 	}
 	cfg.PostgresAddress = "localhost:5433"
 
-	pg, err := NewPostgres(context.Background(), *cfg)
+	pg, err := NewPostgres(context.Background(), *cfg, &NoopMetricsClient{})
 	if err != nil {
 		t.Fatal(err)
 	}

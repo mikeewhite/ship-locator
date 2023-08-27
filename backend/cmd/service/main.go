@@ -14,6 +14,7 @@ import (
 	"github.com/mikeewhite/ship-locator/backend/internal/repositories/postgres"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
+	"github.com/mikeewhite/ship-locator/backend/pkg/metrics"
 )
 
 func main() {
@@ -28,12 +29,19 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	gracefulShutdownOnSignal(cancel)
 
-	repo, err := postgres.NewPostgres(ctx, *cfg)
+	metricsClient := metrics.New(*cfg)
+	go func() {
+		if err := metricsClient.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			clog.Errorf("metrics client stopped due to error: %s", err.Error())
+		}
+	}()
+
+	repo, err := postgres.NewPostgres(ctx, *cfg, metricsClient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Postgres repository: %s", err.Error()))
 	}
 	service := shipsrv.New(repo)
-	consumer, err := kafka.NewConsumer(*cfg, shipsrv.New(repo))
+	consumer, err := kafka.NewConsumer(*cfg, shipsrv.New(repo), metricsClient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka consumer: %s", err.Error()))
 	}

@@ -19,6 +19,8 @@ type Config struct {
 	PostgresPassword string `default:"postgres"`
 	PostgresAddress  string `default:"localhost:5432"`
 	PostgresDBName   string `default:"ship_db"`
+
+	PrometheusServerAddress string `default:":2112"`
 }
 
 func Load() (*Config, error) {

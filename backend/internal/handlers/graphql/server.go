@@ -50,7 +50,7 @@ func New(cfg config.Config, service ports.ShipService) (*Server, error) {
 }
 
 func (s *Server) Serve(ctx context.Context) error {
-	clog.Infof("Starting GraphQL server at %s\n", s.httpServer.Addr)
+	clog.Infof("Starting GraphQL server at %s", s.httpServer.Addr)
 	go func() {
 		<-ctx.Done()
 		clog.Info("Stopping GraphQL server")

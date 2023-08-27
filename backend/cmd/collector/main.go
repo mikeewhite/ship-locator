@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +13,7 @@ import (
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/websocket"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
+	"github.com/mikeewhite/ship-locator/backend/pkg/metrics"
 )
 
 func main() {
@@ -23,14 +25,22 @@ func main() {
 		panic(fmt.Sprintf("error on loading config: %s", err.Error()))
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	gracefulShutdownOnSignal(cancel)
+
+	metricsClient := metrics.New(*cfg)
+	go func() {
+		if err := metricsClient.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			clog.Errorf("metrics client stopped due to error: %s", err.Error())
+		}
+	}()
+
 	producer, err := kafka.NewProducer(*cfg)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka producer: %s", err.Error()))
 	}
 	defer producer.Shutdown()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	gracefulShutdownOnSignal(cancel)
 	service := collectorsrv.New(ctx, producer)
 	defer service.Shutdown()
 	listener, err := websocket.NewWebSocketListener(*cfg, service)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/domain"
 	"github.com/mikeewhite/ship-locator/backend/pkg/apperrors"
@@ -18,7 +19,7 @@ type Metrics interface {
 }
 
 type Postgres struct {
-	conn    *pgx.Conn
+	pool    *pgxpool.Pool
 	metrics Metrics
 }
 
@@ -35,22 +36,27 @@ const (
 				UPDATE SET name = EXCLUDED.name, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude`
 )
 
-// TODO - use a connection pool - https://github.com/jackc/pgx/wiki/Getting-started-with-pgx#using-a-connection-pool
 func NewPostgres(ctx context.Context, cfg config.Config, metrics Metrics) (*Postgres, error) {
 	url := fmt.Sprintf("postgres://%s:%s@%s/%s",
 		cfg.PostgresUsername, cfg.PostgresPassword, cfg.PostgresAddress, cfg.PostgresDBName)
-	conn, err := pgx.Connect(ctx, url)
+
+	poolCfg, err := pgxpool.ParseConfig(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse postgres config: %w", err)
+	}
+	poolCfg.ConnConfig.Tracer = newTracer()
+	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish connection to postgres: %w", err)
 	}
 
 	// check the connection is healthy
-	err = conn.Ping(ctx)
+	err = pool.Ping(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to ping postgres: %w", err)
 	}
 
-	return &Postgres{conn: conn, metrics: metrics}, nil
+	return &Postgres{pool: pool, metrics: metrics}, nil
 }
 
 func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
@@ -59,7 +65,7 @@ func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
 	var latitude float64
 	var longitude float64
 
-	err := pg.conn.QueryRow(ctx, selectSQL, mmsi).Scan(&name, &latitude, &longitude)
+	err := pg.pool.QueryRow(ctx, selectSQL, mmsi).Scan(&name, &latitude, &longitude)
 	if err == pgx.ErrNoRows {
 		return domain.Ship{}, apperrors.NewNoShipFoundErr(mmsi)
 	}
@@ -73,8 +79,9 @@ func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
 func (pg *Postgres) Store(ctx context.Context, ships []domain.Ship) error {
 	start := time.Now()
 	defer pg.metrics.DBQueryTime("store_ship_data", start)
+
 	for _, ship := range ships {
-		_, err := pg.conn.Exec(ctx, updateSQL, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude)
+		_, err := pg.pool.Exec(ctx, updateSQL, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude)
 		if err != nil {
 			return fmt.Errorf("error on inserting ship with mmsi '%d': %w", ship.MMSI, err)
 		}
@@ -85,7 +92,5 @@ func (pg *Postgres) Store(ctx context.Context, ships []domain.Ship) error {
 }
 
 func (pg *Postgres) Shutdown(ctx context.Context) {
-	if err := pg.conn.Close(ctx); err != nil {
-		clog.Errorf("failed to close postgres connection: %s", err.Error())
-	}
+	pg.pool.Close()
 }

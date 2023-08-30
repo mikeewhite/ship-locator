@@ -33,12 +33,12 @@ func setup(t *testing.T) *testVars {
 
 	t.Cleanup(func() {
 		// wipe database
-		_, err := pg.conn.Exec(context.Background(), "DELETE FROM ships")
+		_, err := pg.pool.Exec(context.Background(), "DELETE FROM ships")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_ = pg.conn.Close(context.Background())
+		pg.pool.Close()
 	})
 	return &testVars{pg: pg}
 }

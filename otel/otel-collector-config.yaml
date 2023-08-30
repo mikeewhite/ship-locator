@@ -1,0 +1,31 @@
+# see https://opentelemetry.io/docs/collector/configuration
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+exporters:
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+  prometheusremotewrite:
+     endpoint: 'http://prometheus:9090/api/v1/write'
+     tls:
+       insecure: true
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheusremotewrite]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger]

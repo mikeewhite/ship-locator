@@ -15,6 +15,7 @@ import (
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
 	"github.com/mikeewhite/ship-locator/backend/pkg/metrics"
+	"github.com/mikeewhite/ship-locator/backend/pkg/tracing"
 )
 
 func main() {
@@ -28,6 +29,12 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	gracefulShutdownOnSignal(cancel)
+
+	traceProvider, err := tracing.NewTraceProvider(ctx, *cfg, "ship-data-service")
+	if err != nil {
+		panic(fmt.Sprintf("error on initialising trace provider: %s", err.Error()))
+	}
+	defer traceProvider.Shutdown(ctx)
 
 	metricsClient := metrics.New(*cfg)
 	go func() {

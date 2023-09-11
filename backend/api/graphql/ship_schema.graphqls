@@ -1,8 +1,11 @@
+scalar Date
+
 type Ship {
     MMSI: Int!
     Name: String!
     Latitude: Float!
     Longitude: Float!
+    LastUpdated: Date!
 }
 
 type Query {

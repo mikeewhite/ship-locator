@@ -12,6 +12,7 @@ const SHIP_SEARCH_QUERY = gql`
             name
             latitude
             longitude
+            lastUpdated
         }
     }
 `;

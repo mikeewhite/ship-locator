@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,12 +20,14 @@ type MockRepo struct {
 }
 
 func (mr *MockRepo) Get(_ context.Context, mmsi int32) (domain.Ship, error) {
+	lastUpdated, _ := time.Parse(time.RFC3339, "2023-09-11T17:04:05Z")
 	if mmsi == 259000420 {
 		return domain.Ship{
-			MMSI:      259000420,
-			Name:      "AUGUSTSON",
-			Latitude:  66.02695,
-			Longitude: 12.253821666666665,
+			MMSI:        259000420,
+			Name:        "AUGUSTSON",
+			Latitude:    66.02695,
+			Longitude:   12.253821666666665,
+			LastUpdated: lastUpdated,
 		}, nil
 	}
 	return domain.Ship{}, apperrors.NewNoShipFoundErr(mmsi)
@@ -67,7 +70,7 @@ func TestHandleQuery_FullyPopulatedResponse(t *testing.T) {
 
 	url := `http://localhost:8085/graphql`
 	body := `{
-			"query": "{ ship(mmsi: 259000420) { mmsi name latitude longitude } }"
+			"query": "{ ship(mmsi: 259000420) { mmsi name latitude longitude lastUpdated } }"
 		}`
 	req, err := http.NewRequest("POST", url, strings.NewReader(body))
 	req.Header.Add("Content-Type", "application/json")
@@ -83,7 +86,8 @@ func TestHandleQuery_FullyPopulatedResponse(t *testing.T) {
 				"mmsi": 259000420,
 				"name": "AUGUSTSON",
 				"latitude": 66.02695,
-				"longitude": 12.253821666666665
+				"longitude": 12.253821666666665,
+				"lastUpdated": "2023-09-11T17:04:05Z"
 			}
 		}
 	}`

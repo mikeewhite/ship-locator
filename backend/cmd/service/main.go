@@ -48,7 +48,7 @@ func main() {
 		panic(fmt.Sprintf("failed to initialise Postgres repository: %s", err.Error()))
 	}
 	service := shipsrv.New(repo)
-	consumer, err := kafka.NewConsumer(*cfg, shipsrv.New(repo), metricsClient)
+	consumer, err := kafka.NewConsumer(*cfg, service, metricsClient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka consumer: %s", err.Error()))
 	}

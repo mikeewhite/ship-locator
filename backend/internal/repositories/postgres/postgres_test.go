@@ -21,13 +21,13 @@ func TestGet_NoMatchingResult(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	now := time.Now().UTC()
+	timestamp, _ := time.Parse(time.RFC3339, "2023-09-11T17:04:05Z")
 	ship := domain.Ship{
 		MMSI:        259000420,
 		Name:        "AUGUSTSON",
 		Latitude:    66.02695,
 		Longitude:   12.253821666666665,
-		LastUpdated: now,
+		LastUpdated: timestamp,
 	}
 	ships := []domain.Ship{ship}
 
@@ -42,7 +42,7 @@ func TestStore(t *testing.T) {
 	assert.Equal(t, "AUGUSTSON", returnedShip.Name)
 	assert.Equal(t, 66.02695, returnedShip.Latitude)
 	assert.Equal(t, 12.253821666666665, returnedShip.Longitude)
-	assert.Equal(t, now, returnedShip.LastUpdated)
+	assert.Equal(t, timestamp, returnedShip.LastUpdated)
 }
 
 func TestStore_OverwritesExistingEntries(t *testing.T) {

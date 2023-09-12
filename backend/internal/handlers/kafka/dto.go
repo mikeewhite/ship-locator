@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 
@@ -41,5 +42,5 @@ func (dto *shipDTO) toDomainEntity() (*domain.Ship, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert key '%s' to integer: %w", dto.Key, err)
 	}
-	return domain.NewShip(int32(mmsi), dto.Name, dto.Latitude, dto.Longitude), nil
+	return domain.NewShip(int32(mmsi), dto.Name, dto.Latitude, dto.Longitude, time.Now()), nil
 }

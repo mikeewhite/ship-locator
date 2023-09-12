@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,11 +21,13 @@ func TestGet_NoMatchingResult(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
+	timestamp, _ := time.Parse(time.RFC3339, "2023-09-11T17:04:05Z")
 	ship := domain.Ship{
-		MMSI:      259000420,
-		Name:      "AUGUSTSON",
-		Latitude:  66.02695,
-		Longitude: 12.253821666666665,
+		MMSI:        259000420,
+		Name:        "AUGUSTSON",
+		Latitude:    66.02695,
+		Longitude:   12.253821666666665,
+		LastUpdated: timestamp,
 	}
 	ships := []domain.Ship{ship}
 
@@ -39,14 +42,17 @@ func TestStore(t *testing.T) {
 	assert.Equal(t, "AUGUSTSON", returnedShip.Name)
 	assert.Equal(t, 66.02695, returnedShip.Latitude)
 	assert.Equal(t, 12.253821666666665, returnedShip.Longitude)
+	assert.Equal(t, timestamp, returnedShip.LastUpdated)
 }
 
 func TestStore_OverwritesExistingEntries(t *testing.T) {
+	now := time.Now().UTC()
 	ship := domain.Ship{
-		MMSI:      259000420,
-		Name:      "AUGUSTSON",
-		Latitude:  66.02695,
-		Longitude: 12.253821666666665,
+		MMSI:        259000420,
+		Name:        "AUGUSTSON",
+		Latitude:    66.02695,
+		Longitude:   12.253821666666665,
+		LastUpdated: now,
 	}
 	ships := []domain.Ship{ship}
 
@@ -56,6 +62,7 @@ func TestStore_OverwritesExistingEntries(t *testing.T) {
 	// change the ship location and store again
 	ships[0].Latitude = 66.03421
 	ships[0].Longitude = 12.34251
+	ships[0].LastUpdated = time.Now().UTC()
 	require.NoError(t, tv.pg.Store(context.Background(), ships))
 
 	// retrieve the entry to check its details have been updated
@@ -63,4 +70,7 @@ func TestStore_OverwritesExistingEntries(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 66.03421, updatedShip.Latitude)
 	assert.Equal(t, 12.34251, updatedShip.Longitude)
+
+	// check that the updated_at field has been updated
+	assert.True(t, updatedShip.LastUpdated.After(now))
 }

@@ -21,6 +21,9 @@ func (s *Server) getSchemaConfig() graphql.SchemaConfig {
 				"longitude": &graphql.Field{
 					Type: graphql.Float,
 				},
+				"lastUpdated": &graphql.Field{
+					Type: graphql.DateTime,
+				},
 			},
 		},
 	)

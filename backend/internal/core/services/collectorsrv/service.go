@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/domain"
 	"github.com/mikeewhite/ship-locator/backend/internal/core/ports"
@@ -36,7 +37,7 @@ func New(ctx context.Context, publisher ports.Producer) *Service {
 }
 
 func (s *Service) Process(mmsi int32, shipName string, latitude, longitude float64) error {
-	ship := domain.NewShip(mmsi, shipName, latitude, longitude)
+	ship := domain.NewShip(mmsi, shipName, latitude, longitude, time.Now())
 	if err := ship.Validate(); err != nil {
 		return fmt.Errorf("invalid ship entity: %w", err)
 	}

@@ -1,6 +1,8 @@
 import React from 'react';
-import { Descriptions, Space } from 'antd';
+import { Descriptions, Space, Typography } from 'antd';
 import type { DescriptionsProps } from 'antd';
+
+const { Text, Link } = Typography;
 
 const Ship = (props: { ship: any; }) => {
     const { ship } = props;
@@ -41,6 +43,7 @@ const Ship = (props: { ship: any; }) => {
                     src={"https://www.google.com/maps/embed/v1/view?key=" + process.env.REACT_APP_GOOGLE_MAPS_API_KEY + "&center=" + ship.latitude + "," + ship.longitude + "&zoom=15"}
                     allowFullScreen>
             </iframe>
+            <Text type="secondary">Last updated: {new Date(ship.lastUpdated).toUTCString()}</Text>
         </Space>
     );
 };

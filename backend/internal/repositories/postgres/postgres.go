@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,15 +26,15 @@ type Postgres struct {
 
 const (
 	selectSQL = `
-			SELECT name, latitude, longitude
+			SELECT name, latitude, longitude, last_updated
 			FROM ships
 			WHERE mmsi=$1`
 	updateSQL = `
-			INSERT INTO ships (mmsi, name, latitude, longitude)
-			VALUES ($1, $2, $3, $4)
+			INSERT INTO ships (mmsi, name, latitude, longitude, last_updated)
+			VALUES ($1, $2, $3, $4, $5)
 			ON CONFLICT (mmsi)
 			DO
-				UPDATE SET name = EXCLUDED.name, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude`
+				UPDATE SET name = EXCLUDED.name, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, last_updated = EXCLUDED.last_updated`
 )
 
 func NewPostgres(ctx context.Context, cfg config.Config, metrics Metrics) (*Postgres, error) {
@@ -64,16 +65,17 @@ func (pg *Postgres) Get(ctx context.Context, mmsi int32) (domain.Ship, error) {
 	var name string
 	var latitude float64
 	var longitude float64
+	var updatedAt time.Time
 
-	err := pg.pool.QueryRow(ctx, selectSQL, mmsi).Scan(&name, &latitude, &longitude)
-	if err == pgx.ErrNoRows {
+	err := pg.pool.QueryRow(ctx, selectSQL, mmsi).Scan(&name, &latitude, &longitude, &updatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return domain.Ship{}, apperrors.NewNoShipFoundErr(mmsi)
 	}
 	if err != nil {
 		return domain.Ship{}, fmt.Errorf("error on querying ship with id '%d': %w", mmsi, err)
 	}
 
-	return *domain.NewShip(mmsi, name, latitude, longitude), nil
+	return *domain.NewShip(mmsi, name, latitude, longitude, updatedAt), nil
 }
 
 func (pg *Postgres) Store(ctx context.Context, ships []domain.Ship) error {
@@ -81,7 +83,7 @@ func (pg *Postgres) Store(ctx context.Context, ships []domain.Ship) error {
 	defer pg.metrics.DBQueryTime("store_ship_data", start)
 
 	for _, ship := range ships {
-		_, err := pg.pool.Exec(ctx, updateSQL, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude)
+		_, err := pg.pool.Exec(ctx, updateSQL, ship.MMSI, ship.Name, ship.Latitude, ship.Longitude, ship.LastUpdated)
 		if err != nil {
 			return fmt.Errorf("error on inserting ship with mmsi '%d': %w", ship.MMSI, err)
 		}

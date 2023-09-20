@@ -44,3 +44,12 @@ func (dto *shipDTO) toDomainEntity() (*domain.Ship, error) {
 	}
 	return domain.NewShip(int32(mmsi), dto.Name, dto.Latitude, dto.Longitude, time.Now()), nil
 }
+
+func (dto *shipDTO) toDomainSearchResult() (*domain.ShipSearchResult, error) {
+	mmsi, err := strconv.ParseInt(dto.Key, 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert key '%s' to integer: %w", dto.Key, err)
+	}
+	ssr := domain.NewShipSearchResult(int32(mmsi), dto.Name)
+	return &ssr, nil
+}

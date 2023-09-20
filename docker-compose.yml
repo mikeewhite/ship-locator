@@ -100,13 +100,27 @@ services:
       - ./pgadmin4/servers.json:/pgadmin4/servers.json
       - pgadmin_data:/var/lib/pgadmin
 
+  elasticsearch:
+    hostname: elasticsearch
+    container_name: elasticsearch
+    image: elasticsearch:8.8.0
+    ports:
+      - 9200:9200 # Elasticsearch HTTP (for requests)
+      - 9300:9300 # Elasticsearch TCP transport (for communication between nodes within the cluster)
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - cluster.name=ship-locator
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
   prometheus:
     hostname: prometheus
     container_name: prometheus
     image: prom/prometheus:v2.46.0
     ports:
-      - 9090:9090
-      - 9464:9464
+      - 9090:9090 # Prometheus UI
+      - 9464:9464 # OpenTelemetry Collector
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
@@ -178,6 +192,7 @@ services:
       - SHIPLOC_KAFKAADDRESS=kafka:9092
       - SHIPLOC_POSTGRESADDRESS=postgres:5432
       - SHIPLOC_TRACINGCOLLECTORADDRESS=otel-collector:4318
+      - SHIPLOC_ELASTICSEARCHADDRESS=http://elasticsearch:9200
     command: ./service
     ports:
       - "8085:8085"
@@ -202,3 +217,4 @@ services:
 volumes:
   pgdata:
   pgadmin_data:
+  elasticsearch-data:

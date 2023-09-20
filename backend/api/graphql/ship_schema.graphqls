@@ -1,5 +1,10 @@
 scalar Date
 
+type ShipSearchResult {
+    MMSI: Int!
+    Name: String!
+}
+
 type Ship {
     MMSI: Int!
     Name: String!
@@ -9,5 +14,6 @@ type Ship {
 }
 
 type Query {
+    lookupShipByNameOrMMSI(searchTerm: String!): [ShipSearchResult]
     getShipByMMSI(mmsi: Int!): Ship
 }

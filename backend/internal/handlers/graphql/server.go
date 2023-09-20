@@ -15,9 +15,10 @@ import (
 )
 
 type Server struct {
-	httpServer http.Server
-	service    ports.ShipService
-	schema     *graphql.Schema
+	httpServer         http.Server
+	service            ports.ShipService
+	shipServiceService ports.ShipSearchService
+	schema             *graphql.Schema
 }
 
 type postData struct {
@@ -28,9 +29,10 @@ type postData struct {
 
 const endpoint = "/graphql"
 
-func New(cfg config.Config, service ports.ShipService) (*Server, error) {
+func New(cfg config.Config, service ports.ShipService, shipSearchService ports.ShipSearchService) (*Server, error) {
 	s := &Server{
-		service: service,
+		service:            service,
+		shipServiceService: shipSearchService,
 	}
 
 	schema, err := graphql.NewSchema(s.getSchemaConfig())
@@ -69,6 +71,7 @@ func (s *Server) Shutdown() {
 func (s *Server) HandleQuery(w http.ResponseWriter, r *http.Request) {
 	var p postData
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		clog.Errorf("invalid graphql request: %s", err.Error())
 		w.WriteHeader(400)
 		return
 	}

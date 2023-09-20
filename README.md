@@ -2,7 +2,7 @@
 
 ![build status](https://github.com/mikeewhite/ship-locator/actions/workflows/go.yml/badge.svg) [![codecov](https://codecov.io/gh/mikeewhite/ports-service/graph/badge.svg?token=BVGJXYFWCC)](https://codecov.io/gh/mikeewhite/ports-service)
 
-![](https://github.com/mikeewhite/ship-locator/blob/main/demo.gif)
+![](https://github.com/mikeewhite/ship-locator/blob/main/images/demo.gif)
 
 ## Usage
 

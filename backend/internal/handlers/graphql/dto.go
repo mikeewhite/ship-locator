@@ -13,6 +13,11 @@ type Ship struct {
 	LastUpdated time.Time `json:"lastUpdated"`
 }
 
+type ShipSearchResult struct {
+	MMSI int32  `json:"mmsi"`
+	Name string `json:"name"`
+}
+
 func toDTO(s domain.Ship) Ship {
 	return Ship{
 		MMSI:        s.MMSI,
@@ -21,4 +26,16 @@ func toDTO(s domain.Ship) Ship {
 		Longitude:   s.Longitude,
 		LastUpdated: s.LastUpdated,
 	}
+}
+
+func toShipResultDTOs(searchResults []domain.ShipSearchResult) []ShipSearchResult {
+	dtos := make([]ShipSearchResult, len(searchResults))
+	for i := 0; i < len(searchResults); i++ {
+		dtos[i] = ShipSearchResult{
+			MMSI: searchResults[i].MMSI,
+			Name: searchResults[i].Name,
+		}
+	}
+
+	return dtos
 }

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Empty, Input } from 'antd';
+import { Empty, Space } from 'antd';
 import { useLazyQuery, gql } from '@apollo/client';
 import Ship from './Ship';
-
-const { Search } = Input;
+import ShipAutoComplete from "./ShipAutoComplete";
 
 const SHIP_SEARCH_QUERY = gql`
     query ($filter: Int!) {
@@ -18,29 +17,33 @@ const SHIP_SEARCH_QUERY = gql`
 `;
 
 const ShipSearch = () => {
+    const [selectedData, setSelectedData] = useState<String | null>(null);
     const [searchFilter, setSearchFilter] = useState('');
     const [executeSearch, { data }] = useLazyQuery(
         SHIP_SEARCH_QUERY
     );
 
-    return (
-        <>
-            <div>
-                <Search placeholder="Enter MMSI..."
-                        style={{ width: 200 }}
-                        onChange={(e) => setSearchFilter(e.target.value)}
-                        onSearch={() => executeSearch({
-                            variables: { filter: searchFilter }
-                        })}
-                />
-            </div>
-            {data ? (
-                    <Ship ship={data.ship} />
-                ) : (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                )
+    const handleAutoCompleteSelect = (mmsi: String | null) => {
+        executeSearch({
+            variables: { filter: mmsi }
+        }).then(r => {
+                if (r.data) {
+                    setSelectedData(mmsi);
+                }
             }
-        </>
+        );
+    };
+
+    return (
+        <Space direction="vertical">
+            <ShipAutoComplete onSelect={handleAutoCompleteSelect}/>
+                {selectedData ? (
+                            <Ship ship={data.ship} />
+                    ) : (
+                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                    )
+                }
+        </Space>
     );
 };
 

@@ -5,6 +5,20 @@ import (
 )
 
 func (s *Server) getSchemaConfig() graphql.SchemaConfig {
+	shipSearchResult := graphql.NewObject(
+		graphql.ObjectConfig{
+			Name: "ShipSearchResult",
+			Fields: graphql.Fields{
+				"mmsi": &graphql.Field{
+					Type: graphql.Int,
+				},
+				"name": &graphql.Field{
+					Type: graphql.String,
+				},
+			},
+		},
+	)
+
 	shipType := graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Ship",
@@ -28,10 +42,19 @@ func (s *Server) getSchemaConfig() graphql.SchemaConfig {
 		},
 	)
 
-	queryType := graphql.NewObject(
+	rootQuery := graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "RootQuery",
 			Fields: graphql.Fields{
+				"shipSearch": &graphql.Field{
+					Type: graphql.NewList(shipSearchResult),
+					Args: graphql.FieldConfigArgument{
+						"searchTerm": &graphql.ArgumentConfig{
+							Type: graphql.String,
+						},
+					},
+					Resolve: s.lookupShipByNameOrMMSI,
+				},
 				"ship": &graphql.Field{
 					Type: shipType,
 					Args: graphql.FieldConfigArgument{
@@ -45,6 +68,6 @@ func (s *Server) getSchemaConfig() graphql.SchemaConfig {
 		})
 
 	return graphql.SchemaConfig{
-		Query: queryType,
+		Query: rootQuery,
 	}
 }

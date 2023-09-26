@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrcsrv"
+	"github.com/mikeewhite/ship-locator/backend/internal/repositories/shipsrc/elasticsearch"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,17 +41,24 @@ func main() {
 
 	metricsClient := metrics.New(*cfg)
 	go func() {
-		if err := metricsClient.Serve(ctx); err != nil && err != http.ErrServerClosed {
+		if err := metricsClient.Serve(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			clog.Errorf("metrics client stopped due to error: %s", err.Error())
 		}
 	}()
 
+	searchRepo, err := elasticsearch.New(ctx, *cfg)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialise Elasticsearch repository: %s", err.Error()))
+	}
+	searchService := shipsrcsrv.New(searchRepo)
+
 	repo, err := postgres.NewPostgres(ctx, *cfg, metricsClient)
+	defer repo.Shutdown(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Postgres repository: %s", err.Error()))
 	}
 	service := shipsrv.New(repo)
-	consumer, err := kafka.NewConsumer(*cfg, service, metricsClient)
+	consumer, err := kafka.NewConsumer(*cfg, service, searchService, metricsClient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka consumer: %s", err.Error()))
 	}
@@ -59,7 +69,7 @@ func main() {
 		}
 	}()
 
-	server, err := graphql.New(*cfg, service)
+	server, err := graphql.New(*cfg, service, searchService)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise GraphQL server: %s", err.Error()))
 	}

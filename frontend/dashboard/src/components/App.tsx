@@ -2,6 +2,7 @@ import React from 'react';
 import { Layout, Space, version, theme } from 'antd';
 import { AimOutlined, RocketOutlined } from '@ant-design/icons';
 import ShipSearch from "./ShipSearch";
+import ShipAutoComplete from "./ShipAutoComplete";
 
 const { Header, Footer, Content } = Layout;
 
@@ -18,6 +19,7 @@ function App() {
               </Header>
               <Layout style={{ padding: '24px 0', background: colorBgContainer }}>
                   <Content style={{ textAlign: 'center', padding: '0 24px' }}>
+                      {/*<ShipAutoComplete/>*/}
                       <ShipSearch/>
                   </Content>
               </Layout>

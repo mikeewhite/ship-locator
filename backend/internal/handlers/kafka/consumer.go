@@ -14,12 +14,13 @@ import (
 )
 
 type Consumer struct {
-	reader  *kafka.Reader
-	service ports.ShipService
-	metrics Metrics
+	reader        *kafka.Reader
+	service       ports.ShipService
+	searchService ports.ShipSearchService
+	metrics       Metrics
 }
 
-func NewConsumer(cfg config.Config, service ports.ShipService, metrics Metrics) (*Consumer, error) {
+func NewConsumer(cfg config.Config, service ports.ShipService, searchService ports.ShipSearchService, metrics Metrics) (*Consumer, error) {
 	return &Consumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  []string{cfg.KafkaAddress},
@@ -31,8 +32,9 @@ func NewConsumer(cfg config.Config, service ports.ShipService, metrics Metrics) 
 				fmt.Println()
 			}),
 		}),
-		service: service,
-		metrics: metrics,
+		service:       service,
+		searchService: searchService,
+		metrics:       metrics,
 	}, nil
 }
 
@@ -63,6 +65,16 @@ func (c *Consumer) Read(ctx context.Context) error {
 			err = c.service.Store(ctx, ships)
 			if err != nil {
 				return fmt.Errorf("error on storing ship data: %w", err)
+			}
+
+			// TODO - this should be a separate consumer for the search service which should be consuming 'ship-data-stored' events on a different topic
+			searchResult, err := dto.toDomainSearchResult()
+			if err != nil {
+				return fmt.Errorf("error on converting ship DTO to domain search result: %w", err)
+			}
+			err = c.searchService.Store(ctx, []domain.ShipSearchResult{*searchResult})
+			if err != nil {
+				return fmt.Errorf("error on storing ship search result: %w", err)
 			}
 		}
 	}

@@ -9,6 +9,9 @@ import (
 type Config struct {
 	WebSocketAPIKey string
 
+	ElasticsearchAddress string `default:"http://localhost:9200"`
+	ElasticsearchIndex   string `default:"ship_search_index"`
+
 	GraphQLAddress string `default:":8085"`
 
 	KafkaAddress       string `default:"localhost:9092"`

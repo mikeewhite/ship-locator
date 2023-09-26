@@ -14,3 +14,8 @@ type ShipService interface {
 	Get(ctx context.Context, mmsi int32) (domain.Ship, error)
 	Store(ctx context.Context, ships []domain.Ship) error
 }
+
+type ShipSearchService interface {
+	Search(ctx context.Context, searchTerm string) ([]domain.ShipSearchResult, error)
+	Store(ctx context.Context, ships []domain.ShipSearchResult) error
+}

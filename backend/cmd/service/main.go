@@ -4,16 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrcsrv"
-	"github.com/mikeewhite/ship-locator/backend/internal/repositories/shipsrc/elasticsearch"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrcsrv"
+	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka/consumer"
+	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka/producer"
+	"github.com/mikeewhite/ship-locator/backend/internal/repositories/shipsrc/elasticsearch"
+
 	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrv"
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/graphql"
-	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka"
 	"github.com/mikeewhite/ship-locator/backend/internal/repositories/postgres"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
@@ -46,25 +48,34 @@ func main() {
 		}
 	}()
 
+	// initialise the ship search service
+	// TODO - this should be moved to the dedicated search microservice (it's currently here so that
+	// the GraphQL server can access it)
 	searchRepo, err := elasticsearch.New(ctx, *cfg)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Elasticsearch repository: %s", err.Error()))
 	}
 	searchService := shipsrcsrv.New(searchRepo)
 
+	// initialise the ship data service
 	repo, err := postgres.NewPostgres(ctx, *cfg, metricsClient)
 	defer repo.Shutdown(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Postgres repository: %s", err.Error()))
 	}
-	service := shipsrv.New(repo)
-	consumer, err := kafka.NewConsumer(*cfg, service, searchService, metricsClient)
+	shipEventProducer, err := producer.NewShipEventProducer(*cfg)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialise ship event producer: %s", err.Error()))
+	}
+	service := shipsrv.New(repo, shipEventProducer)
+
+	consumer, err := consumer.NewShipDataConsumer(*cfg, service, searchService, metricsClient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka consumer: %s", err.Error()))
 	}
 	defer consumer.Shutdown()
 	go func() {
-		if err := consumer.Read(ctx); err != nil && err != context.Canceled {
+		if err := consumer.Read(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			clog.Errorf("kafka consumer stopped due to error: %s", err.Error())
 		}
 	}()

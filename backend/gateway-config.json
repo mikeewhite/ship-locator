@@ -1,0 +1,29 @@
+{
+  "gateway-port": 8085,
+  "private-port": 8087,
+  "plugins": [
+    {
+      "name": "admin-ui"
+    },
+    {
+      "name": "playground"
+    },
+    {
+      "name": "limits",
+      "config": {
+        "max-request-bytes": 1048576,
+        "max-response-time": "2s"
+      }
+    },
+    {
+      "name": "cors",
+      "config": {
+        "allowed-origins": ["*"],
+        "allowed-headers": ["*"],
+        "allow-credentials": true,
+        "max-age": 3600,
+        "debug": true
+      }
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import {
 } from '@apollo/client';
 
 const httpLink = createHttpLink({
-    uri: 'http://localhost:8085/graphql'
+    uri: 'http://localhost:8085/query'
 });
 
 const client = new ApolloClient({

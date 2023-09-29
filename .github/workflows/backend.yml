@@ -79,6 +79,10 @@ jobs:
         working-directory: backend
         run: go build -v ./cmd/search-service
 
+      - name: Build API gateway
+        working-directory: backend
+        run: go build -v ./cmd/gateway
+
       - name: Test
         working-directory: backend
         run: go test -v -coverprofile=coverage.out ./...

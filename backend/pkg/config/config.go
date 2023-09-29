@@ -12,7 +12,7 @@ type Config struct {
 	ElasticsearchAddress string `default:"http://localhost:9200"`
 	ElasticsearchIndex   string `default:"ship_search_index"`
 
-	GraphQLAddress string `default:":8085"`
+	GraphQLAddress string `default:":8086"`
 
 	KafkaAddress        string `default:"localhost:9092"`
 	KafkaShipDataTopic  string `default:"ship-data-topic"`

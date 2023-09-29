@@ -1,4 +1,4 @@
-package graphql
+package shipgraph
 
 import (
 	_ "embed"
@@ -30,20 +30,6 @@ func (s *Server) getSchemaConfig() graphql.SchemaConfig {
 					Type: graphql.String,
 				},
 				"schema": &graphql.Field{
-					Type: graphql.String,
-				},
-			},
-		},
-	)
-
-	shipSearchResult := graphql.NewObject(
-		graphql.ObjectConfig{
-			Name: "ShipSearchResult",
-			Fields: graphql.Fields{
-				"mmsi": &graphql.Field{
-					Type: graphql.Int,
-				},
-				"name": &graphql.Field{
 					Type: graphql.String,
 				},
 			},
@@ -86,15 +72,6 @@ func (s *Server) getSchemaConfig() graphql.SchemaConfig {
 							Schema:  schema,
 						}, nil
 					},
-				},
-				"shipSearch": &graphql.Field{
-					Type: graphql.NewList(shipSearchResult),
-					Args: graphql.FieldConfigArgument{
-						"searchTerm": &graphql.ArgumentConfig{
-							Type: graphql.String,
-						},
-					},
-					Resolve: s.lookupShipByNameOrMMSI,
 				},
 				"ship": &graphql.Field{
 					Type: shipType,

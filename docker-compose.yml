@@ -238,6 +238,8 @@ services:
       - SHIPLOC_TRACINGCOLLECTORADDRESS=otel-collector:4318
       - SHIPLOC_ELASTICSEARCHADDRESS=http://elasticsearch:9200
     command: ./search-service
+    ports:
+      - "8087:8087" # GraphQL API
     depends_on:
       - kafka
       - init-kafka
@@ -257,10 +259,10 @@ services:
       - ./backend/gateway-config.json:/app/gateway-config.json
     command: [ "./gateway", "-config", "/app/gateway-config.json" ]
     environment:
-      - BRAMBLE_SERVICE_LIST=http://ship-data-service:8086/graphql
+      - BRAMBLE_SERVICE_LIST=http://ship-data-service:8086/graphql http://ship-search-service:8087/graphql
     ports:
       - 8085:8085 # Gateway port (that federated API is served on)
-      - 8087:8087 # Private port (for admin interface)
+      - 8088:8088 # Private port (for admin interface)
       - 8082:8082 # GraphQL Playground
       - 8083:8083 # GraphQL Voyager
       - 9009:9009 # GraphQL Schema

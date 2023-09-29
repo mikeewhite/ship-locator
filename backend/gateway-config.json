@@ -1,6 +1,6 @@
 {
   "gateway-port": 8085,
-  "private-port": 8087,
+  "private-port": 8088,
   "plugins": [
     {
       "name": "admin-ui"

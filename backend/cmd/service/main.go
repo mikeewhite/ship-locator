@@ -10,12 +10,12 @@ import (
 	"syscall"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrcsrv"
+	"github.com/mikeewhite/ship-locator/backend/internal/handlers/graphql/shipgraph"
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka/consumer"
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka/producer"
 	"github.com/mikeewhite/ship-locator/backend/internal/repositories/shipsrc/elasticsearch"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrv"
-	"github.com/mikeewhite/ship-locator/backend/internal/handlers/graphql"
 	"github.com/mikeewhite/ship-locator/backend/internal/repositories/postgres"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
@@ -80,11 +80,11 @@ func main() {
 		}
 	}()
 
-	server, err := graphql.New(*cfg, service, searchService)
+	server, err := shipgraph.New(*cfg, service)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise GraphQL server: %s", err.Error()))
 	}
-	if err := server.Serve(ctx); err != nil && err != http.ErrServerClosed {
+	if err := server.Serve(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		clog.Errorf("graphql server stopped due to error: %s\n", err.Error())
 	}
 }

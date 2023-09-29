@@ -14,9 +14,10 @@ type Config struct {
 
 	GraphQLAddress string `default:":8085"`
 
-	KafkaAddress       string `default:"localhost:9092"`
-	KafkaTopic         string `default:"ship-data-topic"`
-	KafkaConsumerGroup string `default:"consumer-group-1"`
+	KafkaAddress        string `default:"localhost:9092"`
+	KafkaShipDataTopic  string `default:"ship-data-topic"`
+	KafkaShipEventTopic string `default:"ship-event-topic"`
+	KafkaConsumerGroup  string `default:"consumer-group-1"`
 
 	PostgresUsername string `default:"postgres"`
 	PostgresPassword string `default:"postgres"`

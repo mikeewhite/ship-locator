@@ -1,6 +1,6 @@
 # 🚢 Ship Locator
 
-![build status](https://github.com/mikeewhite/ship-locator/actions/workflows/go.yml/badge.svg) [![codecov](https://codecov.io/gh/mikeewhite/ports-service/graph/badge.svg?token=BVGJXYFWCC)](https://codecov.io/gh/mikeewhite/ports-service)
+![build status](https://github.com/mikeewhite/ship-locator/actions/workflows/backend.yml/badge.svg) [![codecov](https://codecov.io/gh/mikeewhite/ports-service/graph/badge.svg?token=BVGJXYFWCC)](https://codecov.io/gh/mikeewhite/ports-service)
 
 ![](https://github.com/mikeewhite/ship-locator/blob/main/images/demo.gif)
 
@@ -57,4 +57,4 @@ Once started the following services will be available:
 
 ### TODOs
 
-- [ ] Separate out elasticserach capability into a separate ship search microservice which consumes and reacts to 'ship-location-updated' events
+- [ ] Move search query from GraphQL API to Ship Search Microservice and use a federated GraphQL server so to present the combined API as a single endpoint

@@ -4,6 +4,7 @@
 backend/collector
 backend/coverage.out
 backend/service
+backend/search-service
 
 frontend/dashboard/node_modules
 frontend/dashboard/.pnp

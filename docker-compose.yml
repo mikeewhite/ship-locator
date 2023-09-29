@@ -11,6 +11,8 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
+  # Kafka broker
+  # Visible to localhost on port 29092. Visible to other containers on port 9092.
   kafka:
     image: confluentinc/cp-kafka:7.3.0
     hostname: kafka
@@ -19,6 +21,8 @@ services:
       - zookeeper
     ports:
       - "29092:29092"
+    expose :
+      - "9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -27,6 +31,25 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TOOLS_LOG4J_LOGLEVEL: ERROR
+
+  # Container to initialize Kafka topics via CLI
+  init-kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ship-data-topic --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ship-event-topic --replication-factor 1 --partitions 1
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.0
@@ -181,9 +204,9 @@ services:
       - kafka
     restart: unless-stopped
 
-  service:
-    hostname: service
-    container_name: service
+  ship-data-service:
+    hostname: ship-data-service
+    container_name: ship-data-service
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -198,8 +221,28 @@ services:
       - "8085:8085"
     depends_on:
       - kafka
+      - init-kafka
       - postgres
       - otel-collector
+    restart: unless-stopped
+
+  ship-search-service:
+    hostname: ship-search-service
+    container_name: ship-search-service
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: search-service
+    environment:
+      - SHIPLOC_KAFKAADDRESS=kafka:9092
+      - SHIPLOC_TRACINGCOLLECTORADDRESS=otel-collector:4318
+      - SHIPLOC_ELASTICSEARCHADDRESS=http://elasticsearch:9200
+    command: ./search-service
+    depends_on:
+      - kafka
+      - init-kafka
+      - otel-collector
+      - elasticsearch
     restart: unless-stopped
 
   dashboard:

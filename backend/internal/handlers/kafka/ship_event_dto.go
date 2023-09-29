@@ -4,22 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/segmentio/kafka-go"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/domain"
 )
 
-type shipDTO struct {
+type ShipLocationUpdatedEventDTO struct {
 	Key       string  `json:"-"`
 	Name      string  `json:"name"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
-func NewShipDTOFromDomainEntity(s domain.Ship) *shipDTO {
-	return &shipDTO{
+func NewShipLocationUpdatedEventDTOFromDomainEntity(s domain.Ship) *ShipLocationUpdatedEventDTO {
+	return &ShipLocationUpdatedEventDTO{
 		Key:       strconv.FormatInt(int64(s.MMSI), 10),
 		Name:      s.Name,
 		Latitude:  s.Latitude,
@@ -27,8 +26,8 @@ func NewShipDTOFromDomainEntity(s domain.Ship) *shipDTO {
 	}
 }
 
-func NewShipDTOFromKafkaMsg(msg *kafka.Message) (*shipDTO, error) {
-	var dto shipDTO
+func NewShipLocationUpdatedEventDTOFromKafkaMsg(msg *kafka.Message) (*ShipLocationUpdatedEventDTO, error) {
+	var dto ShipLocationUpdatedEventDTO
 	err := json.Unmarshal(msg.Value, &dto)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal ship data: %w", err)
@@ -37,15 +36,7 @@ func NewShipDTOFromKafkaMsg(msg *kafka.Message) (*shipDTO, error) {
 	return &dto, err
 }
 
-func (dto *shipDTO) ToDomainEntity() (*domain.Ship, error) {
-	mmsi, err := strconv.ParseInt(dto.Key, 10, 32)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert key '%s' to integer: %w", dto.Key, err)
-	}
-	return domain.NewShip(int32(mmsi), dto.Name, dto.Latitude, dto.Longitude, time.Now()), nil
-}
-
-func (dto *shipDTO) ToDomainSearchResult() (*domain.ShipSearchResult, error) {
+func (dto *ShipLocationUpdatedEventDTO) ToDomainEntity() (*domain.ShipSearchResult, error) {
 	mmsi, err := strconv.ParseInt(dto.Key, 10, 32)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert key '%s' to integer: %w", dto.Key, err)

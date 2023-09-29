@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/services/collectorsrv"
-	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka"
+	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka/producer"
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/websocket"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
 	"github.com/mikeewhite/ship-locator/backend/pkg/config"
@@ -35,7 +35,7 @@ func main() {
 		}
 	}()
 
-	producer, err := kafka.NewProducer(*cfg)
+	producer, err := producer.NewShipDataProducer(*cfg)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialise Kafka producer: %s", err.Error()))
 	}

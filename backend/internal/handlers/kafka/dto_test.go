@@ -18,7 +18,7 @@ func TestNewShipDTOFromDomainEntity(t *testing.T) {
 		Longitude: 12.253821666666665,
 	}
 
-	dto := newShipDTOFromDomainEntity(s)
+	dto := NewShipDTOFromDomainEntity(s)
 	assert.Equal(t, "259000420", dto.Key)
 	assert.Equal(t, "AUGUSTSON", dto.Name)
 	assert.Equal(t, 66.02695, dto.Latitude)
@@ -31,7 +31,7 @@ func TestNewShipDTOFromKafkaMsg(t *testing.T) {
 		Value: []byte(`{"name":"AUGUSTSON", "latitude":66.02695, "longitude":12.253821666666665}`),
 	}
 
-	dto, err := newShipDTOFromKafkaMsg(msg)
+	dto, err := NewShipDTOFromKafkaMsg(msg)
 	require.NoError(t, err)
 	assert.Equal(t, "259000420", dto.Key)
 	assert.Equal(t, "AUGUSTSON", dto.Name)
@@ -47,7 +47,7 @@ func TestToDomainEntity(t *testing.T) {
 		Longitude: 12.253821666666665,
 	}
 
-	entity, err := dto.toDomainEntity()
+	entity, err := dto.ToDomainEntity()
 	require.NoError(t, err)
 	assert.Equal(t, int32(259000420), entity.MMSI)
 	assert.Equal(t, "AUGUSTSON", entity.Name)

@@ -1,4 +1,4 @@
-name: Go
+name: Backend
 
 on:
   push:
@@ -67,13 +67,17 @@ jobs:
       - name: Run migrations
         run: psql -f backend/migrations/create_tables.sql postgresql://postgres:postgres@localhost:5433/ship_db
 
-      - name: Build collector
+      - name: Build Collector
         working-directory: backend
         run: go build -v ./cmd/collector
 
-      - name: Build service
+      - name: Build Ship Data Service
         working-directory: backend
         run: go build -v ./cmd/service
+
+      - name: Build Ship Search Service
+        working-directory: backend
+        run: go build -v ./cmd/search-service
 
       - name: Test
         working-directory: backend

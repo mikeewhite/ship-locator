@@ -46,6 +46,9 @@ func main() {
 
 	// start the ship event consumer
 	shipEventConsumer, err := consumer.NewShipEventConsumer(*cfg, searchService, metricsClient)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialise ship event consumer: %s", err.Error()))
+	}
 	defer shipEventConsumer.Shutdown()
 	if err := shipEventConsumer.Read(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		clog.Errorf("kafka consumer stopped due to error: %s", err.Error())

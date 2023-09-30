@@ -7,30 +7,31 @@
 This repository represents a learning exercise in using the following technologies to build a ship location system that
 exposes [AIS](https://en.wikipedia.org/wiki/Automatic_identification_system) data sourced from [aisstream.io](https://aisstream.io/) via a websocket API:
 
-![](https://github.com/mikeewhite/ship-locator/blob/main/images/ship-locator-container-diagram.png.gif)
+![](https://github.com/mikeewhite/ship-locator/blob/main/images/ship-locator-container-diagram.png)
 
 **Backend**
-- Go (microservices)
-- Kafka
-- PostgreSQL
-- Elasticsearch
+- [Go](https://go.dev/)
+- [Kafka](https://kafka.apache.org/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Elasticsearch](https://www.elastic.co)
 
 **APIs**
- - gRPC
- - GraphQL
+ - [gRPC](https://grpc.io/)
+ - [GraphQL](https://graphql.org/)
+ - [Bramble](https://movio.github.io/bramble/#/) (federated GraphQL gateway)
 
 **Frontend**
-- React
-- Typescript
-- Apollo Client
-- Ant Design
-- Google Maps API
+- [React](https://react.dev/)
+- [Typescript](https://www.typescriptlang.org/)
+- [Apollo Client](https://www.apollographql.com/docs/react/)
+- [Ant Design](https://ant.design/)
+- [Google Maps API](https://developers.google.com/maps)
 
 **Observability**
-- OpenTelemetry
-- Jaeger
-- Prometheus
-- Grafana
+- [OpenTelemetry](https://opentelemetry.io/)
+- [Jaeger](https://www.jaegertracing.io/)
+- [Prometheus](https://prometheus.io/)
+- [Grafana](https://grafana.com/)
 
 ## Usage
 

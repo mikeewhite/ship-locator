@@ -7,6 +7,8 @@
 This repository represents a learning exercise in using the following technologies to build a ship location system that
 exposes [AIS](https://en.wikipedia.org/wiki/Automatic_identification_system) data sourced from [aisstream.io](https://aisstream.io/) via a websocket API:
 
+![](https://github.com/mikeewhite/ship-locator/blob/main/images/ship-locator-container-diagram.png.gif)
+
 **Backend**
 - Go (microservices)
 - Kafka

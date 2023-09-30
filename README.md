@@ -59,7 +59,3 @@ Once started the following services will be available:
 | Grafana (metrics)   | http://localhost:3002 | `admin`/`admin`                                                           |
 | Jaeger UI (tracing) | http://localhost:16686 | -                                                                         |
 | pgAdmin (DB UI)     | http://localhost:5050 | `admin@admin.com`/`admin` (and `postgres` for saved server configuration) | 
-
-### TODOs
-
-- [ ] Move search query from GraphQL API to Ship Search Microservice and use a federated GraphQL server so to present the combined API as a single endpoint

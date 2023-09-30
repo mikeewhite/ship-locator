@@ -6,6 +6,7 @@ WORKDIR /build/
 RUN go build -o collector ./cmd/collector
 RUN go build -o service ./cmd/service
 RUN go build -o search-service ./cmd/search-service
+RUN go build -o gateway ./cmd/gateway
 
 FROM alpine:3.17 as collector
 WORKDIR /app
@@ -18,3 +19,8 @@ COPY --from=builder /build/service ./
 FROM alpine:3.17 as search-service
 WORKDIR /app
 COPY --from=builder /build/search-service ./
+
+FROM alpine:3.17 as gateway
+WORKDIR /app
+COPY --from=builder /build/gateway ./
+

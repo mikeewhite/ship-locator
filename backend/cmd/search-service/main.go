@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/mikeewhite/ship-locator/backend/internal/core/services/shipsrcsrv"
+	"github.com/mikeewhite/ship-locator/backend/internal/handlers/graphql/searchgraph"
 	"github.com/mikeewhite/ship-locator/backend/internal/handlers/kafka/consumer"
 	"github.com/mikeewhite/ship-locator/backend/internal/repositories/shipsrc/elasticsearch"
 	"github.com/mikeewhite/ship-locator/backend/pkg/clog"
@@ -50,8 +51,18 @@ func main() {
 		panic(fmt.Sprintf("failed to initialise ship event consumer: %s", err.Error()))
 	}
 	defer shipEventConsumer.Shutdown()
-	if err := shipEventConsumer.Read(ctx); err != nil && !errors.Is(err, context.Canceled) {
-		clog.Errorf("kafka consumer stopped due to error: %s", err.Error())
+	go func() {
+		if err := shipEventConsumer.Read(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			clog.Errorf("kafka consumer stopped due to error: %s", err.Error())
+		}
+	}()
+
+	server, err := searchgraph.New(*cfg, searchService)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialise GraphQL server: %s", err.Error()))
+	}
+	if err := server.Serve(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		clog.Errorf("graphql server stopped due to error: %s\n", err.Error())
 	}
 }
 

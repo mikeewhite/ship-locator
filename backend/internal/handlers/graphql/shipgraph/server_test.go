@@ -1,4 +1,4 @@
-package graphql
+package shipgraph
 
 import (
 	"context"
@@ -38,31 +38,11 @@ func (mr *MockShipService) Store(_ context.Context, _ []domain.Ship) error {
 	return nil
 }
 
-type MockShipSearchService struct {
-}
-
-func (msss *MockShipSearchService) Search(_ context.Context, searchTerm string) ([]domain.ShipSearchResult, error) {
-	if searchTerm == "AUGUSTSON" {
-		return []domain.ShipSearchResult{
-			{
-				MMSI: 259000420,
-				Name: "AUGUSTSON",
-			},
-		}, nil
-	}
-	return []domain.ShipSearchResult{}, nil
-}
-
-func (msss *MockShipSearchService) Store(_ context.Context, _ []domain.ShipSearchResult) error {
-	// noop
-	return nil
-}
-
 func TestHandleQuery_Ship_NoMatch(t *testing.T) {
 	cfg, err := config.Load()
 	require.NoError(t, err)
 
-	srv, err := New(*cfg, &MockShipService{}, &MockShipSearchService{})
+	srv, err := New(*cfg, &MockShipService{})
 	require.NoError(t, err)
 	defer srv.Shutdown()
 
@@ -84,7 +64,7 @@ func TestHandleQuery_Ship_FullyPopulatedResponse(t *testing.T) {
 	cfg, err := config.Load()
 	require.NoError(t, err)
 
-	srv, err := New(*cfg, &MockShipService{}, &MockShipSearchService{})
+	srv, err := New(*cfg, &MockShipService{})
 	require.NoError(t, err)
 	defer srv.Shutdown()
 
@@ -118,7 +98,7 @@ func TestHandleQuery_Ship_PartiallyPopulatedResponse(t *testing.T) {
 	cfg, err := config.Load()
 	require.NoError(t, err)
 
-	srv, err := New(*cfg, &MockShipService{}, &MockShipSearchService{})
+	srv, err := New(*cfg, &MockShipService{})
 	require.NoError(t, err)
 	defer srv.Shutdown()
 
@@ -138,88 +118,6 @@ func TestHandleQuery_Ship_PartiallyPopulatedResponse(t *testing.T) {
 			"ship": {
 				"name": "AUGUSTSON"
 			}
-		}
-	}`
-	assert.JSONEq(t, expResp, rec.Body.String())
-}
-
-func TestHandleQuery_ShipSearch_NoMatch(t *testing.T) {
-	cfg, err := config.Load()
-	require.NoError(t, err)
-
-	srv, err := New(*cfg, &MockShipService{}, &MockShipSearchService{})
-	require.NoError(t, err)
-	defer srv.Shutdown()
-
-	url := `http://localhost:8085/graphql`
-	body := `{
-			"query": "{ shipSearch(searchTerm: \"1234\") { mmsi name } }"
-		}`
-	req, err := http.NewRequest("POST", url, strings.NewReader(body))
-	require.NoError(t, err)
-
-	rec := httptest.NewRecorder()
-	srv.HandleQuery(rec, req)
-
-	assert.Equal(t, 200, rec.Code)
-	assert.Contains(t, rec.Body.String(), "")
-}
-
-func TestHandleQuery_ShipSearch_FullyPopulatedResponse(t *testing.T) {
-	cfg, err := config.Load()
-	require.NoError(t, err)
-
-	srv, err := New(*cfg, &MockShipService{}, &MockShipSearchService{})
-	require.NoError(t, err)
-	defer srv.Shutdown()
-
-	url := `http://localhost:8085/graphql`
-	body := `{
-			"query": "{ shipSearch(searchTerm: \"AUGUSTSON\") { mmsi name } }"
-		}`
-	req, err := http.NewRequest("POST", url, strings.NewReader(body))
-	req.Header.Add("Content-Type", "application/json")
-	require.NoError(t, err)
-
-	rec := httptest.NewRecorder()
-	srv.HandleQuery(rec, req)
-
-	require.Equal(t, 200, rec.Code)
-	expResp := `{
-		"data": {
-			"shipSearch": [{
-				"mmsi": 259000420,
-				"name": "AUGUSTSON"
-			}]
-		}
-	}`
-	assert.JSONEq(t, expResp, rec.Body.String())
-}
-
-func TestHandleQuery_ShipSearch_PartiallyPopulatedResponse(t *testing.T) {
-	cfg, err := config.Load()
-	require.NoError(t, err)
-
-	srv, err := New(*cfg, &MockShipService{}, &MockShipSearchService{})
-	require.NoError(t, err)
-	defer srv.Shutdown()
-
-	url := `http://localhost:8085/graphql`
-	body := `{
-			"query": "{ shipSearch(searchTerm: \"AUGUSTSON\") { name } }"
-		}`
-	req, err := http.NewRequest("POST", url, strings.NewReader(body))
-	require.NoError(t, err)
-
-	rec := httptest.NewRecorder()
-	srv.HandleQuery(rec, req)
-
-	assert.Equal(t, 200, rec.Code)
-	expResp := `{
-		"data": {
-			"shipSearch": [{
-				"name": "AUGUSTSON"
-			}]
 		}
 	}`
 	assert.JSONEq(t, expResp, rec.Body.String())

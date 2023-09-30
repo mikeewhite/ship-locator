@@ -1,4 +1,4 @@
-package graphql
+package shipgraph
 
 import (
 	"context"
@@ -15,10 +15,9 @@ import (
 )
 
 type Server struct {
-	httpServer         http.Server
-	service            ports.ShipService
-	shipServiceService ports.ShipSearchService
-	schema             *graphql.Schema
+	httpServer http.Server
+	service    ports.ShipService
+	schema     *graphql.Schema
 }
 
 type postData struct {
@@ -29,10 +28,9 @@ type postData struct {
 
 const endpoint = "/graphql"
 
-func New(cfg config.Config, service ports.ShipService, shipSearchService ports.ShipSearchService) (*Server, error) {
+func New(cfg config.Config, service ports.ShipService) (*Server, error) {
 	s := &Server{
-		service:            service,
-		shipServiceService: shipSearchService,
+		service: service,
 	}
 
 	schema, err := graphql.NewSchema(s.getSchemaConfig())
@@ -44,7 +42,7 @@ func New(cfg config.Config, service ports.ShipService, shipSearchService ports.S
 	mux := http.NewServeMux()
 	mux.HandleFunc(endpoint, s.HandleQuery)
 	s.httpServer = http.Server{
-		Addr:    cfg.GraphQLAddress,
+		Addr:    cfg.GraphQLShipServiceAddress,
 		Handler: cors.Default().Handler(mux),
 	}
 
